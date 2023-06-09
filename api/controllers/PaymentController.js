@@ -39,9 +39,9 @@ class PaymentController {
       // en sub se saca desde el ultimo invoice
       case "course":
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: 20 * 100, //20 USD
-          currency: "USD",
-          description: "Curso",
+          amount: 20 * 10000, //20 USD, * 100 pq esta en centavos
+          currency: "ARS",
+          description: "Curso individual",
           customer: customerId,
         });
 
