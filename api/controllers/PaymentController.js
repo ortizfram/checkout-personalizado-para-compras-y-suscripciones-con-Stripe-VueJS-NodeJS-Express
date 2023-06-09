@@ -20,16 +20,12 @@ class PaymentController {
         status: false,
       });
     }
-
-    res.send({
-      data: "Hola",
-    });
   }
 
   async storeOrders(req, res) {
     // venta de cursos individuales
     const productType = req.params.product_type;
-    const customerId = req.body.customer_id;
+    const customerId = req.body.customer_id; // de stripe, se obtiene con un email
 
     if (!customerId) {
       res.send({
@@ -39,6 +35,8 @@ class PaymentController {
     }
 
     switch (productType) {
+      // para hacer todo necesito el payment_intent.client_secret,
+      // en sub se saca desde el ultimo invoice
       case "course":
         const paymentIntent = await stripe.paymentIntents.create({
           amount: 20 * 100, //20 USD
@@ -53,13 +51,13 @@ class PaymentController {
             status: true,
             data: paymentIntent.client_secret,
           });
+        } else {
+          res.send({
+            // if not data for payment intent ERROR MSG
+            status: false,
+            message: "No paymentIntent created",
+          });
         }
-
-        res.send({
-          // if not data for payment intent ERROR MSG
-          status: false,
-          message: "No paymentIntent created",
-        });
         break;
 
       case "subscription":
@@ -76,7 +74,7 @@ class PaymentController {
         });
 
         if (subscription && subscription.latest_invoice) {
-          // si todo exitoso retornar client secret del ultimo payment intent invoice
+          // si todo exitoso retornar client secret del ultimo payment_intent latest_invoice
           res.send({
             status: true,
             data: subscription.latest_invoice.payment_intent.client_secret,

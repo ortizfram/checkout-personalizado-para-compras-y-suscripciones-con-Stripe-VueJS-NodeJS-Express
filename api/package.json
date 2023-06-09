@@ -13,7 +13,7 @@
   "dependencies": {
     "body-parser": "^1.20.2",
     "express": "^4.18.2",
-    "stripe": "^12.8.0"
+    "stripe": "^12.9.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
