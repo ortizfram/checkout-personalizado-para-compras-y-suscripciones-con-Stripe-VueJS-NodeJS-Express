@@ -96,6 +96,13 @@ class PaymentController {
         break;
     }
   }
+
+  async completePayment(req, res) {
+    // open localtunnel: $ lt --port 5000
+    res.send({
+      data: "Hola desde localhost",
+    });
+  }
 }
 
 module.exports = PaymentController;
