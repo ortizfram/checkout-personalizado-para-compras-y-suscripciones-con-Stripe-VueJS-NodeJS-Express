@@ -62,7 +62,7 @@ class PaymentController {
 
       case "subscription":
         const membershipPriceId = "price_1NH5oXF7xSH4WmUPRLN7fPQf";
-        const subscription = await stripe.subscription.create({
+        const subscription = await stripe.subscriptions.create({
           customer: customerId,
           items: [
             {
@@ -79,12 +79,12 @@ class PaymentController {
             status: true,
             data: subscription.latest_invoice.payment_intent.client_secret,
           });
+        } else {
+          res.send({
+            status: false,
+            message: "No subscription created",
+          });
         }
-
-        res.send({
-          status: false,
-          message: "No subscription created",
-        });
 
         break;
 
