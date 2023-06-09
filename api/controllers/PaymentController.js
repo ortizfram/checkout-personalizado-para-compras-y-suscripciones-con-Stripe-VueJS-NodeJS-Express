@@ -31,6 +31,13 @@ class PaymentController {
     const productType = req.params.product_type;
     const customerId = req.body.customer_id;
 
+    if (!customerId) {
+      res.send({
+        status: false,
+        message: "No Customer",
+      });
+    }
+
     switch (productType) {
       case "course":
         const paymentIntent = await stripe.paymentIntents.create({
@@ -53,6 +60,34 @@ class PaymentController {
           status: false,
           message: "No paymentIntent created",
         });
+        break;
+
+      case "subscription":
+        const membershipPriceId = "price_1NH5oXF7xSH4WmUPRLN7fPQf";
+        const subscription = await stripe.subscription.create({
+          customer: customerId,
+          items: [
+            {
+              price: membershipPriceId,
+            },
+          ],
+          payment_behavior: "default_incomplete",
+          expand: ["latest_invoice.payment_intent"],
+        });
+
+        if (subscription && subscription.latest_invoice) {
+          // si todo exitoso retornar client secret del ultimo payment intent invoice
+          res.send({
+            status: true,
+            data: subscription.latest_invoice.payment_intent.client_secret,
+          });
+        }
+
+        res.send({
+          status: false,
+          message: "No subscription created",
+        });
+
         break;
 
       default:
