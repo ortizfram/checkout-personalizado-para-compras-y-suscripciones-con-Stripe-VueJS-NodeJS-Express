@@ -1,6 +1,6 @@
-const stripe = require("stripe")(
-  "sk_test_51MfSIVF7xSH4WmUPecW4tJED9sfp1FZhrgnyiI8DTCJF5ZNMwmGX5ZqiLaVKfAcvpVMJnPLXxqMx9j0pi6BrFeLV00vRBJ9XGm"
-);
+require("dotenv").config();
+
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 class PaymentController {
   async login(req, res) {
@@ -39,7 +39,7 @@ class PaymentController {
       // en sub se saca desde el ultimo invoice
       case "course":
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: 20 * 10000, //20 USD, * 100 pq esta en centavos
+          amount: 20 * 1000, //20 USD, * 100 pq esta en centavos
           currency: "ARS",
           description: "Curso individual",
           customer: customerId,
@@ -61,7 +61,7 @@ class PaymentController {
         break;
 
       case "subscription":
-        const membershipPriceId = "price_1NH5oXF7xSH4WmUPRLN7fPQf";
+        const membershipPriceId = process.env.STRIPE_ST_MEMBERSHIP_PRICE_ID;
         const subscription = await stripe.subscriptions.create({
           customer: customerId,
           items: [
@@ -99,9 +99,33 @@ class PaymentController {
 
   async completePayment(req, res) {
     // open localtunnel: $ lt --port 5000
-    res.send({
-      data: "Hola desde localhost",
-    });
+    const STRIPE_WEBHOOK_kEY = process.env.STRIPE_WEBHOOK_kEY;
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        req.header("Stripe-Signature"),
+        STRIPE_WEBHOOK_kEY
+      );
+    } catch (error) {
+      res.status(405);
+      res.send({
+        error: error.message,
+      });
+    }
+
+    if (event && event.data) {
+      const dataObject = event.data.object;
+      console.log(dataObject);
+      res.send({
+        data: "Todo correcto",
+      });
+    } else {
+      res.send({
+        error: error.message,
+      });
+    }
   }
 }
 
