@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// const stripe = require("stripe")("");
 
 class PaymentController {
   async login(req, res) {
@@ -98,32 +99,27 @@ class PaymentController {
   }
 
   async completePayment(req, res) {
-    // open localtunnel: $ lt --port 5000
-    const STRIPE_WEBHOOK_kEY = process.env.STRIPE_WEBHOOK_kEY;
     let event;
 
     try {
       event = stripe.webhooks.constructEvent(
         req.body,
         req.header("Stripe-Signature"),
-        STRIPE_WEBHOOK_kEY
+        process.env.STRIPE_WEBHOOK_kEY
       );
-    } catch (error) {
-      res.status(405);
-      res.send({
-        error: error.message,
-      });
-    }
 
-    if (event && event.data && event.data.object) {
-      const dataObject = event.data.object;
-      console.log(dataObject);
-      res.send({
-        data: "Todo correcto",
-      });
-    } else {
-      res.send({
-        error: "error",
+      if (event && event.data && event.data.object) {
+        const dataObject = event.data.object;
+        console.log(dataObject);
+        res.send({
+          data: "Todo correcto",
+        });
+      } else {
+        throw new Error("Invalid event data");
+      }
+    } catch (error) {
+      res.status(405).send({
+        error: error.message,
       });
     }
   }
