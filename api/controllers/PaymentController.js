@@ -115,7 +115,7 @@ class PaymentController {
       });
     }
 
-    if (event && event.data) {
+    if (event && event.data && event.data.object) {
       const dataObject = event.data.object;
       console.log(dataObject);
       res.send({
@@ -123,7 +123,7 @@ class PaymentController {
       });
     } else {
       res.send({
-        error: error.message,
+        error: "error",
       });
     }
   }
