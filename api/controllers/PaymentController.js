@@ -1,9 +1,14 @@
 require("dotenv").config();
+const fs = require("fs");
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 // const stripe = require("stripe")("");
 
 class PaymentController {
+  constructor() {
+    this.completePayment = this.completePayment.bind(this);
+  }
+
   async login(req, res) {
     // crear stripe customer con email y retornar response
     const customer = await stripe.customers.create({
@@ -121,6 +126,71 @@ class PaymentController {
       res.status(405).send({
         error: error.message,
       });
+    }
+
+    switch (event.type) {
+      case "invoice.payment_succeeded":
+        if (dataObject["invoice"] === "subscription_create") {
+          const subscriptionId = dataObject["subscription"];
+          const paymentIntentId = dataObject["payment_intent"];
+
+          const paymentIntent = await stripe.paymentIntent.retrieve(
+            paymentIntentId
+          );
+
+          try {
+            const subscription = await stripe.subscriptions.update(
+              subscriptionId,
+              {
+                default_payment_method: paymentIntent.payment_method,
+              }
+            );
+
+            res.send({
+              message: "Subscription completed",
+            });
+          } catch (error) {
+            res.status(405);
+            res.send({
+              message: error.message,
+            });
+          }
+        }
+        break;
+
+      case "payment_intent.succeeded":
+        this.__storeDatabase(1414);
+
+        res.send({
+          status: true,
+          message: "Course access created",
+        });
+        break;
+
+      default:
+        console.log("Undefined event type");
+        break;
+    }
+  }
+
+  __storeDatabase(courseId) {
+    const data = fs.readFileSync("./database/db.json", {
+      encoding: "utf8",
+      flag: "r",
+    });
+
+    try {
+      const database = JSON.parse(data);
+
+      database.push({
+        course: courseId,
+      });
+
+      fs.writeFileSync("./database/db.json", JSON.stringify(database));
+
+      return true;
+    } catch (error) {
+      throw new Error(error.message);
     }
   }
 }
